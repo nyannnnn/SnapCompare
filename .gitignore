@@ -1,0 +1,37 @@
+# -------------------
+# Global
+# -------------------
+.DS_Store
+Thumbs.db
+.env
+*.log
+
+# -------------------
+# Python (backend/)
+# -------------------
+__pycache__/
+*.pyc
+.venv/
+backend/.env
+backend/__pycache__/
+backend/*.pyc
+
+# -------------------
+# Node.js / React (frontend/)
+# -------------------
+node_modules/
+dist/
+build/
+frontend/.env
+frontend/.next/
+
+# -------------------
+# VS Code
+# -------------------
+.vscode/
+
+# -------------------
+# OS / misc
+# -------------------
+.idea/
+*.swp
