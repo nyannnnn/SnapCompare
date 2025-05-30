@@ -14,6 +14,13 @@ function App() {
   const [hybridSimilarity, setHybridSimilarity] = useState<number | null>(null);
   const [differenceReason, setDifferenceReason] = useState<string | null>(null);
   const [threshold, setThreshold] = useState(0.85);
+  const [bboxImage1, setBboxImage1] = useState<string | null>(null);
+  const [bboxImage2, setBboxImage2] = useState<string | null>(null);
+  const [showBboxPanel, setShowBboxPanel] = useState<boolean>(false);
+  const [reasoningReport, setReasoningReport] = useState<any>(null);
+  const [showReasoning, setShowReasoning] = useState<boolean>(false);
+  const [object_similarity, setObject_similarity] = useState<boolean>(false);
+
 
 
   //function to handle image change
@@ -50,7 +57,7 @@ function App() {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-
+      
       const data = await response.json();
       console.log("Backend response:", data);
       setSimilarity(data.similarity);
@@ -62,6 +69,12 @@ function App() {
         heatmap: data.diff_heatmap,
         grayscale: data.diff_grayscale
       });
+      setBboxImage1(data.bbox_img1);
+      setBboxImage2(data.bbox_img2);
+      setReasoningReport(data.reasoning_report);
+      setObject_similarity(data.object_similarity);
+      console.log("bbox1:", data.bbox_image1?.slice(0, 100)); // preview first 100 chars
+      console.log("bbox2:", data.bbox_image2?.slice(0, 100));
     } catch (error) {
       console.error("Error comparing images:", error);
     }
@@ -90,7 +103,7 @@ return (
           )}
         </div>
 
-        {/* Image 2 */}
+      {/* Image 2 */}
         <div className="flex flex-col items-center">
           <label className="text-sm font-semibold text-slate-700 mb-2">Image 2</label>
           <input type="file" accept="image/*" onChange={(e) => handleImageChange(e, 2)} />
@@ -103,7 +116,40 @@ return (
           )}
         </div>
       </div>
-
+      {/* Bounding box images */}
+        {showBboxPanel && (
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="text-center">
+            <p className="font-semibold mb-2 text-slate-700">Objects in Image 1</p>
+            <img
+              src={`data:image/png;base64,${bboxImage1}`}
+              alt="BBox 1"
+              className="mx-auto border rounded shadow w-full max-w-md"
+            />
+          </div>
+          <div className="text-center">
+            <p className="font-semibold mb-2 text-slate-700">Objects in Image 2</p>
+            <img
+              src={`data:image/png;base64,${bboxImage2}`}
+              alt="BBox 2"
+              className="mx-auto border rounded shadow w-full max-w-md"
+            />
+          </div>
+        </div>
+      )}
+      {/* Reasoning Report */}
+      {showReasoning && reasoningReport && (
+        <div className="mt-8 bg-white p-6 rounded shadow-md max-w-xl mx-auto text-slate-800">
+          <h3 className="text-xl font-bold mb-4 text-center">Similarity Reasoning</h3>
+          <ul className="text-left space-y-2">
+            <li><strong>SSIM Score:</strong> {reasoningReport.ssim_score}</li>
+            <li><strong>CLIP Score:</strong> {reasoningReport.clip_score}</li>
+            <li><strong>Objects in Image 1:</strong> {reasoningReport.objects_img1}</li>
+            <li><strong>Objects in Image 2:</strong> {reasoningReport.objects_img2}</li>
+            <li><strong>Object Count Difference:</strong> {reasoningReport.object_difference}</li>
+          </ul>
+        </div>
+      )}
       {/* Compare button */}
       <div className="text-center">
         <button
@@ -112,6 +158,21 @@ return (
           className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-6 py-2 rounded transition disabled:opacity-40"
         >
           Compare Images
+        </button>
+      </div>
+      {/* bounding boxes */}
+      <div className="flex justify-center gap-4 mt-6">
+        <button
+          onClick={() => setShowBboxPanel(!showBboxPanel)}
+          className="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded"
+        >
+          {showBboxPanel ? "Hide" : "Show"} Object Detection
+        </button>
+        <button
+          onClick={() => setShowReasoning(!showReasoning)}
+          className="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded"
+        >
+          {showReasoning ? "Hide" : "Show"} Detailed Reasoning
         </button>
       </div>
       {/* Threshold Input */}
@@ -129,11 +190,11 @@ return (
           className="w-64"
         />
       </div>
-      {/* Similarity Score Result */}
+      {/* SSIM Similarity Score Result */}
       {similarity !== null && (
         <div className="mt-8 bg-slate-50 border border-slate-200 p-6 rounded-md shadow-md text-center">
           <p className="text-xl font-semibold text-slate-800">
-            Similarity Score:{" "}
+            SSIM similarity Score:{" "}
             <span className="text-emerald-600 font-bold">{similarity}</span>
           </p>
         </div>
@@ -143,8 +204,17 @@ return (
       {aiSimilarity !== null && (
         <div className="mt-8 bg-slate-50 border border-slate-200 p-6 rounded-md shadow-md text-center">
           <p className="text-xl font-semibold text-slate-800">
-            Ai similarity Score:{" "}
+            CLIP similarity Score:{" "}
             <span className="text-emerald-600 font-bold">{aiSimilarity}</span>
+          </p>
+        </div>
+      )}
+      {/* Object Similarity Score Result */}
+      {object_similarity !== null && (
+        <div className="mt-8 bg-slate-50 border border-slate-200 p-6 rounded-md shadow-md text-center">
+          <p className="text-xl font-semibold text-slate-800">
+            Object similarity Score:{" "}
+            <span className="text-emerald-600 font-bold">{object_similarity}</span>
           </p>
         </div>
       )}
