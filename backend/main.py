@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Query
 from fastapi.middleware.cors import CORSMiddleware
 from services.image_comparator import ImageComparator
 from services.diff_generator import DiffGenerator
@@ -27,7 +27,7 @@ def ping():
     return {"message": "pong"}
 
 @app.post("/compare")
-async def compare_images(file1: UploadFile = File(...), file2: UploadFile = File(...)):
+async def compare_images(file1: UploadFile = File(...), file2: UploadFile = File(...), threshold: float = Query(0.85)):
     try:
         # Read the file bytes
         img1_bytes = await file1.read()
@@ -37,9 +37,9 @@ async def compare_images(file1: UploadFile = File(...), file2: UploadFile = File
         ssim_score, diff = comparator.compute_ssim()
         clip_score = comparator.compute_CLIP_similarity(clip_model, clip_processor)
         hybrid_score = compute_hybrid_score(ssim_score, clip_score)
-        reason = detect_difference_reason(ssim_score, clip_score)
+        reason = detect_difference_reason(ssim_score, clip_score, threshold=threshold)
 
-        overlay = DiffGenerator.overlay(comparator.img1_rgb, diff)
+        overlay = DiffGenerator.overlay(comparator.img1_rgb, diff, threshold=threshold)
         heatmap = DiffGenerator.heatmap(diff)
         grayscale = DiffGenerator.grayscale(diff)
         # Return the SSIM score

@@ -13,6 +13,7 @@ function App() {
   const [aiSimilarity, setAiSimilarity] = useState<number | null>(null);
   const [hybridSimilarity, setHybridSimilarity] = useState<number | null>(null);
   const [differenceReason, setDifferenceReason] = useState<string | null>(null);
+  const [threshold, setThreshold] = useState(0.85);
 
 
   //function to handle image change
@@ -41,7 +42,7 @@ function App() {
     formData.append("file2", image2);
 
     try {
-      const response = await fetch("http://localhost:8000/compare", {
+      const response = await fetch(`http://localhost:8000/compare?threshold=${threshold}`, {
         method: "POST",
         body: formData,
       });
@@ -113,7 +114,21 @@ return (
           Compare Images
         </button>
       </div>
-
+      {/* Threshold Input */}
+      <div className="mt-6 text-center">
+        <label className="block mb-2 font-medium text-slate-700">
+          Difference Map Sensitivity Threshold: {threshold.toFixed(2)}
+        </label>
+        <input
+          type="range"
+          min="0.5"
+          max="0.99"
+          step="0.01"
+          value={threshold}
+          onChange={(e) => setThreshold(parseFloat(e.target.value))}
+          className="w-64"
+        />
+      </div>
       {/* Similarity Score Result */}
       {similarity !== null && (
         <div className="mt-8 bg-slate-50 border border-slate-200 p-6 rounded-md shadow-md text-center">
